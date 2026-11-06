@@ -1,0 +1,31 @@
+{
+  "name": "chatgpt",
+  "description": "ChatGPT's models on your ChatGPT plan, as @chatgpt/<model>",
+  "version": "0.1.0",
+  "providers": [
+    {
+      "name": "chatgpt",
+      "description": "ChatGPT models through Codex, on your plan's included usage",
+      "run": [
+        "python",
+        "./provider.py"
+      ],
+      "timeout": 600
+    }
+  ],
+  "settings": [
+    {
+      "id": "effort",
+      "label": "Effort",
+      "type": "select",
+      "options": ["model default", "low", "medium", "high", "xhigh"],
+      "default": "model default",
+      "help": "How hard the model thinks. A reply Flash asks to think harder always goes as hard as the model does."
+    },
+    {
+      "id": "codex",
+      "label": "Codex program",
+      "help": "Where the codex program is, if it is not on PATH."
+    }
+  ]
+}
