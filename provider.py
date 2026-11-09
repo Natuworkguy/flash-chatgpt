@@ -40,6 +40,15 @@ BILLED_BY_USE = ("self_serve_business_usage_based",
                  "enterprise_cbp_usage_based")
 
 NOTE = "[A note from Flash]"
+TOOL_ENVIRONMENT = (
+    "You are running inside Flash. The read-only sandbox describes Codex's "
+    "built-in execution environment, not the Flash tools supplied to this "
+    "thread. Flash executes those tools and applies its own permissions and "
+    "approval checks. Use the supplied Flash tools for file edits, writes, "
+    "and commands when the task calls for them. Do not infer that Flash's "
+    "tools are read-only from Codex's sandbox setting. If a Flash tool "
+    "actually denies an operation, respect that denial and report it."
+)
 CONTINUE = (f"{NOTE} The results of the tools you called are above. Carry "
             "on from them.")
 
@@ -599,8 +608,8 @@ def run_turn(server: AppServer, ask: dict, out: Out) -> None:
         "environments": [],
         "dynamicTools": dynamic_tools(ask.get("tools")),
     }
-    if instructions:
-        params["baseInstructions"] = instructions
+    params["baseInstructions"] = "\n\n".join(
+        part for part in (instructions, TOOL_ENVIRONMENT) if part)
     thread = (server.call("thread/start", params) or {}).get("thread") or {}
     thread_id = thread.get("id")
     if not thread_id:

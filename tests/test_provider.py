@@ -281,6 +281,18 @@ class TestTools:
 
 
 class TestTheConversation:
+    def test_flash_tool_permissions_are_explained_without_system_messages(
+            self, codex, capsys):
+        codex(events=[message_done("Ready."), completed()])
+        run(ask([{"role": "user", "content": "edit a file"}]))
+
+        [start] = method(codex.sent(), "thread/start")
+        params = start["params"]
+        assert params["baseInstructions"] == provider.TOOL_ENVIRONMENT
+        assert params["sandbox"] == "read-only"
+        assert params["approvalPolicy"] == "never"
+        assert params["environments"] == []
+
     def test_it_goes_in_as_it_was(self, codex, capsys):
         codex(events=[message_done("Done."), completed()])
         png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNg"
@@ -296,7 +308,8 @@ class TestTheConversation:
         ]))
 
         [start] = method(codex.sent(), "thread/start")
-        assert start["params"]["baseInstructions"] == "Be Flash."
+        assert start["params"]["baseInstructions"] == (
+            "Be Flash.\n\n" + provider.TOOL_ENVIRONMENT)
         [inject] = method(codex.sent(), "thread/inject_items")
         items = inject["params"]["items"]
         assert [i["type"] for i in items] == [
