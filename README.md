@@ -1,8 +1,8 @@
 # ChatGPT for Flash
 
 A [Flash](https://github.com/Natuworkguy/Flash) extension that adds
-ChatGPT's models as a model provider, **on your ChatGPT plan's included
-usage**. No API key, nothing billed per token. Once it is installed, they
+ChatGPT's models as a model provider, **using Codex’s current login**. ChatGPT logins use included plan usage;
+API-key logins use API billing. Once it is installed, they
 are picked like any other model:
 
 ```text
@@ -15,9 +15,8 @@ work.
 
 ## Install
 
-You need [Codex](https://github.com/openai/codex), signed in with your
-ChatGPT account. This extension talks to the models through it, which is
-what puts the requests on your plan.
+You need [Codex](https://github.com/openai/codex), signed in with ChatGPT or configured with an API key. This extension
+talks to the models through Codex.
 
 ```bash
 npm install -g @openai/codex     # or: brew install codex
@@ -40,13 +39,12 @@ on chatgpt, then **Codex program**. In the terminal:
 /extension set chatgpt codex /path/to/codex
 ```
 
-## Only on the plan
+## Authentication and billing
 
-Every request is checked before anything is sent:
+API-key logins are accepted and use API billing. No ChatGPT plan or
+included-usage checks apply to API-key requests. Unsigned users are refused.
 
-- **Signed in with ChatGPT.** If Codex is signed in with an API key, or
-  not at all, the request is refused and nothing is sent, since an API
-  key is billed per use.
+For ChatGPT logins, every request is checked before anything is sent:
 - **A plan with included usage.** Workspaces billed by use are turned
   away.
 - **Usage left.** Codex is asked whether your plan's included usage can

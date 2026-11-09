@@ -108,16 +108,24 @@ def method(sent, name):
 
 
 class TestOnThePlan:
-    def test_an_api_key_sign_in_sends_nothing(self, codex, capsys):
-        codex(account={"type": "apiKey"}, events=[completed()])
+    def test_api_key_can_chat_without_plan_limits(self, codex, capsys):
+        codex(account={"type": "apiKey"},
+              limits={"ordinaryUsageAllowed": False},
+              events=[message_done("Hello."), completed()])
 
-        with pytest.raises(provider.CodexError) as caught:
-            run(ask([{"role": "user", "content": "hi"}]))
+        run(ask([{"role": "user", "content": "hi"}]))
 
-        assert "ChatGPT" in caught.value.message
-        assert caught.value.status == 401
-        assert not method(codex.sent(), "thread/start")
-        assert not method(codex.sent(), "turn/start")
+        assert answers(capsys)[0]["message"]["content"] == "Hello."
+        assert method(codex.sent(), "turn/start")
+        assert not method(codex.sent(), "account/rateLimits/read")
+
+    def test_api_key_can_list_models(self, codex, capsys):
+        codex(account={"type": "apiKey"})
+
+        provider.models(argv=[sys.executable, FAKE])
+
+        assert answers(capsys)[0]["models"][0]["name"] == "gpt-big"
+        assert not method(codex.sent(), "account/rateLimits/read")
 
     def test_not_signed_in_sends_nothing(self, codex):
         codex(account=None, events=[completed()])
@@ -351,8 +359,8 @@ class TestModels:
 
         assert answers(capsys)[0]["models"][0]["name"] == "gpt-big"
 
-    def test_listing_needs_the_plan_too(self, codex):
-        codex(account={"type": "apiKey"})
+    def test_listing_requires_authentication(self, codex):
+        codex(account=None)
 
         with pytest.raises(provider.CodexError):
             provider.models(argv=[sys.executable, FAKE])

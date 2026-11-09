@@ -1,36 +1,8 @@
-"""ChatGPT's models, as a model provider for Flash, on your ChatGPT plan.
+"""ChatGPT and API-key models for Flash through codex app-server.
 
-Flash runs this once per request, with JSON on stdin (see Flash's
-docs/EXTENSIONS.md, Providers). Flash's models are named @chatgpt/<model>,
-such as @chatgpt/gpt-5.5: the id is the one Codex lists.
-
-Every request goes through Codex (`codex app-server`), signed in with your
-ChatGPT account (`codex login`), so it is counted against the usage your
-plan includes, never billed to an API key. That is checked each time:
-
-- Codex must be signed in with ChatGPT. Signed in with an API key, or not
-  at all, nothing is sent.
-- A plan billed by use (the usage-based business and enterprise plans) is
-  turned away.
-- Before each request, Codex is asked whether the plan's included usage
-  may be used right now. Once it is used up, the request is refused with
-  when it comes back, so credits bought for Codex are never spent here.
-
-Flash's tools are handed to Codex as its only tools: Codex's own shell,
-file editing and the like are switched off for these threads (no
-environment), so everything the model does goes through Flash, asked
-about as Flash always asks.
-
-Each request is a thread of its own that is not kept (ephemeral): the
-conversation so far is put into it as it was (messages, tool calls and
-their results), and one turn is run. When the model calls a tool, the
-call goes back to Flash, which runs it and asks again with the result.
-
-Only the standard library is used, so nothing is installed.
-
-Settings, on Flash's Extensions page (or /extension set chatgpt ...):
-  effort  model default, low, medium, high or xhigh
-  codex   where the codex program is, when it is not on PATH
+Uses Codex's current authentication. API-key requests use API billing.
+ChatGPT logins retain the included-usage and plan checks.
+Flash supplies the tools and handles their execution and approval.
 """
 
 from __future__ import annotations
@@ -77,11 +49,9 @@ NO_CODEX = (
     "account, then try again. If it is installed somewhere Flash cannot "
     "see, set its path in this extension's settings (Codex program)."
 )
-NOT_CHATGPT = (
-    "Codex is not signed in with a ChatGPT account, so these models would "
-    "not run on your plan. Run `codex login` and choose Sign in with "
-    "ChatGPT. (Signed in with an API key, nothing is sent: that would be "
-    "billed to the key.)"
+NOT_SIGNED_IN = (
+    "Codex is not signed in. Run `codex login` to sign in with ChatGPT "
+    "or configure an API key."
 )
 BILLED_PLAN = (
     "Your ChatGPT workspace is billed by use, not given usage with the "
@@ -286,13 +256,14 @@ def _when(seconds: Any) -> str:
 
 
 def check_plan(server: AppServer) -> dict:
-    """The ChatGPT account Codex is signed in with, once it is sure the
-    request runs on the plan's included usage; else CodexError."""
+    """Accept API-key login; check included usage for ChatGPT accounts."""
 
     found = server.call("account/read", {}) or {}
     account = found.get("account") or {}
+    if account.get("type") == "apiKey":
+        return account
     if account.get("type") != "chatgpt":
-        raise CodexError(NOT_CHATGPT, 401)
+        raise CodexError(NOT_SIGNED_IN, 401)
     if account.get("planType") in BILLED_BY_USE:
         raise CodexError(BILLED_PLAN, 402)
 

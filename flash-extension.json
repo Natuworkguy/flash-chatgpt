@@ -1,11 +1,11 @@
 {
   "name": "chatgpt",
-  "description": "ChatGPT's models on your ChatGPT plan, as @chatgpt/<model>",
+  "description": "Models through Codex, using ChatGPT or API-key authentication",
   "version": "0.1.0",
   "providers": [
     {
       "name": "chatgpt",
-      "description": "ChatGPT models through Codex, on your plan's included usage",
+      "description": "Models through Codex, using ChatGPT or API-key authentication",
       "run": [
         "python",
         "./provider.py"
@@ -18,7 +18,13 @@
       "id": "effort",
       "label": "Effort",
       "type": "select",
-      "options": ["model default", "low", "medium", "high", "xhigh"],
+      "options": [
+        "model default",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
       "default": "model default",
       "help": "How hard the model thinks. A reply Flash asks to think harder always goes as hard as the model does."
     },
